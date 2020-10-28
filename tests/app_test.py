@@ -83,3 +83,22 @@ def test_delete_message(client):
     rv = client.get('/delete/1')
     data = json.loads(rv.data)
     assert data["status"] == 1
+
+
+def test_search_messages(client):
+    """Ensure that messages are searchable"""
+    title_example = 'Title to search'
+    body_text_example = "Sample body-content text"
+
+    login(client, app.config["USERNAME"], app.config["PASSWORD"])
+    rv = client.post(
+        "/add",
+        data=dict(title="<{title}>".format(title=title_example), text=body_text_example),
+        follow_redirects=True,
+    )
+
+    av = client.get("/search", query_string=dict(query=title_example), follow_redirects=True)
+
+    assert b"No entries here so far" not in av.data
+    assert bytes(title_example, 'utf-8') in av.data
+    assert bytes(body_text_example, 'utf-8') in av.data
